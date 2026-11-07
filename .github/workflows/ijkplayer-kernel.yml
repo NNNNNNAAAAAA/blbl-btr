@@ -1,4 +1,4 @@
-name: Publish IjkPlayer Kernel
+name: Upstream Publish IjkPlayer Kernel
 
 on:
   workflow_dispatch:
@@ -12,6 +12,7 @@ concurrency:
 
 jobs:
   publish-kernel:
+    if: github.repository == 'cat3399/blbl'
     name: Validate and publish kernel
     runs-on: ubuntu-latest
     env:

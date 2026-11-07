@@ -46,6 +46,8 @@ enum class SettingId(
     PlayerPreferredAudioId("player_preferred_audio_id"),
     PlayerSeamlessQualitySwitchEnabled("player_seamless_quality_switch_enabled"),
     PlayerCdnPreference("player_cdn_preference"),
+    PlayerBtrEnabled("player_btr_enabled"),
+    PlayerBtrConnections("player_btr_connections"),
     LiveHighBitrateEnabled("live_high_bitrate_enabled"),
     PlayerSpeed("player_speed"),
     PlayerShortSeekStepSeconds("player_short_seek_step_seconds"),

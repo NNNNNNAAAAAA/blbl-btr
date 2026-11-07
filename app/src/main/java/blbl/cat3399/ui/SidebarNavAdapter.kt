@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import blbl.cat3399.BuildConfig
 import blbl.cat3399.R
 import blbl.cat3399.core.log.AppLog
 import blbl.cat3399.core.ui.ThemeColor
@@ -22,7 +23,7 @@ class SidebarNavAdapter(
 
     private val items = ArrayList<NavItem>()
     private var selectedId: Int = ID_HOME
-    private var showLabelsAlways: Boolean = false
+    private var showLabelsAlways: Boolean = BuildConfig.PHONE_PORTRAIT
 
     fun submit(list: List<NavItem>, selectedId: Int) {
         items.clear()

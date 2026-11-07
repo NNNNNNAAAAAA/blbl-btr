@@ -3,6 +3,7 @@
 package blbl.cat3399.feature.player
 
 import android.content.Intent
+import android.content.res.Configuration
 import android.net.Uri
 import android.app.Activity
 import android.app.Application
@@ -49,6 +50,7 @@ import androidx.media3.exoplayer.source.MergingMediaSource
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.CaptionStyleCompat
 import blbl.cat3399.BlblApp
+import blbl.cat3399.BuildConfig
 import blbl.cat3399.R
 import blbl.cat3399.core.api.BiliApi
 import blbl.cat3399.core.api.BiliApiException
@@ -696,6 +698,7 @@ class PlayerActivity : BaseActivity() {
                 },
             )
         setContentView(binding.root)
+        PlayerUiMode.watchPhoneViewport(binding)
         Immersive.apply(this, prefs.fullscreenEnabled)
         PlayerUiMode.applyVideo(this, binding)
         ensureBottomBarConstraintSets()
@@ -1408,6 +1411,17 @@ class PlayerActivity : BaseActivity() {
             exitTraceLog("window:focus", "hasFocus=${if (hasFocus) 1 else 0}")
         }
         if (hasFocus) Immersive.apply(this, BiliClient.prefs.fullscreenEnabled)
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        if (!BuildConfig.PHONE_PORTRAIT) return
+        // The existing player and its position survive rotation; only the overlays are resized.
+        binding.root.post {
+            PlayerUiMode.applyVideo(this, binding)
+            bottomBarFullConstraints = null
+            ensureBottomBarConstraintSets()
+        }
     }
 
     override fun onResume() {

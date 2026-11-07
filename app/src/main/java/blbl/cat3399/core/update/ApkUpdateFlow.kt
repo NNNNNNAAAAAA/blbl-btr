@@ -103,8 +103,7 @@ object ApkUpdateFlow {
 
     fun startDownloadAndInstall(
         activity: ComponentActivity,
-        latestVersionHint: String? = null,
-        apkUrl: String? = null,
+        update: ApkUpdater.RemoteUpdate? = null,
         onResolved: ((latestVersion: String, isNewer: Boolean) -> Unit)? = null,
     ): Job? {
         if (activeJob?.isActive == true) {
@@ -133,10 +132,11 @@ object ApkUpdateFlow {
             activity.lifecycleScope.launch {
                 try {
                     val currentVersion = BuildConfig.VERSION_NAME
-                    val latestVersion = latestVersionHint ?: ApkUpdater.fetchLatestUpdate().versionName
-                    val isNewer = ApkUpdater.isRemoteNewer(latestVersion, currentVersion)
+                    val selectedUpdate = update ?: ApkUpdater.fetchLatestUpdate()
+                    val latestVersion = selectedUpdate.versionName
+                    val isNewer = ApkUpdater.isRemoteNewer(selectedUpdate)
                     onResolved?.invoke(latestVersion, isNewer)
-                    if (!isNewer && apkUrl == null) {
+                    if (!isNewer) {
                         popup?.dismiss()
                         AppToast.show(activity, "已是最新版（当前：$currentVersion）")
                         return@launch
@@ -149,7 +149,7 @@ object ApkUpdateFlow {
                     val apkFile =
                         ApkUpdater.downloadApkToCache(
                             context = activity,
-                            url = apkUrl ?: latestVersionHint?.let(ApkUpdater::apkUrlFor) ?: ApkUpdater.TEST_APK_URL,
+                            update = selectedUpdate,
                         ) { dlState ->
                             when (dlState) {
                                 ApkUpdater.Progress.Connecting -> {

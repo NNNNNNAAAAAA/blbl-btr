@@ -5,6 +5,7 @@ import android.util.AttributeSet
 import android.view.View
 import android.widget.LinearLayout
 import blbl.cat3399.R
+import blbl.cat3399.BuildConfig
 import kotlin.math.max
 
 internal class PopupModalLayout
@@ -27,6 +28,10 @@ internal class PopupModalLayout
                 return
             }
 
+            val maxLayoutHeight =
+                if (BuildConfig.PHONE_PORTRAIT && MeasureSpec.getMode(heightMeasureSpec) != MeasureSpec.UNSPECIFIED) {
+                    minOf(maxHeightPx, MeasureSpec.getSize(heightMeasureSpec))
+                } else maxHeightPx
             val contentView = findViewById<View>(R.id.content)
             var usedHeight = paddingTop + paddingBottom
             var maxWidth = paddingLeft + paddingRight
@@ -60,13 +65,13 @@ internal class PopupModalLayout
                 val child = getChildAt(i) ?: continue
                 if (child.visibility == GONE || child === contentView) continue
                 val lp = child.layoutParams as MarginLayoutParams
-                val availableHeight = maxHeightPx - usedHeight - lp.topMargin - lp.bottomMargin
+                val availableHeight = maxLayoutHeight - usedHeight - lp.topMargin - lp.bottomMargin
                 measureChild(child, availableHeight)
             }
 
             if (contentView != null && contentView.visibility != GONE) {
                 val lp = contentView.layoutParams as MarginLayoutParams
-                val availableHeight = maxHeightPx - usedHeight - lp.topMargin - lp.bottomMargin
+                val availableHeight = maxLayoutHeight - usedHeight - lp.topMargin - lp.bottomMargin
                 measureChild(contentView, availableHeight)
             }
 
@@ -78,7 +83,7 @@ internal class PopupModalLayout
                 )
             val measuredHeight =
                 resolveSizeAndState(
-                    max(usedHeight, suggestedMinimumHeight).coerceAtMost(maxHeightPx),
+                    max(usedHeight, suggestedMinimumHeight).coerceAtMost(maxLayoutHeight),
                     heightMeasureSpec,
                     childState shl MEASURED_HEIGHT_STATE_SHIFT,
                 )

@@ -45,6 +45,7 @@ import blbl.cat3399.feature.player.CdnFailoverDataSourceFactory
 import blbl.cat3399.feature.player.CdnFailoverState
 import blbl.cat3399.feature.player.DebugStreamKind
 import blbl.cat3399.feature.player.Playable
+import blbl.cat3399.feature.player.accelerator.ParallelRangeDataSource
 import okhttp3.OkHttpClient
 import java.io.ByteArrayInputStream
 import java.io.File
@@ -409,6 +410,7 @@ internal class ExoPlayerEngine(
         kind: DebugStreamKind,
         urlCandidates: List<String>? = null,
         mediaRequestProfile: VideoMediaRequestProfile = VideoMediaRequestProfile.WEB,
+        accelerateVod: Boolean = false,
     ): DataSource.Factory {
         val listener =
             object : TransferListener {
@@ -433,7 +435,7 @@ internal class ExoPlayerEngine(
                 VideoMediaRequestProfile.WEB -> okHttpClient
                 VideoMediaRequestProfile.APP -> BiliClient.appCdnOkHttp
             }
-        val upstream = OkHttpDataSource.Factory(client).setTransferListener(listener)
+        val upstream = OkHttpDataSource.Factory(client)
         val uris =
             urlCandidates
                 .orEmpty()
@@ -441,8 +443,19 @@ internal class ExoPlayerEngine(
                 .filter { it.isNotBlank() }
                 .distinct()
                 .map { Uri.parse(it) }
-        if (uris.size <= 1) return upstream
-        return CdnFailoverDataSourceFactory(upstreamFactory = upstream, state = CdnFailoverState(kind = kind, candidates = uris))
+        val fallback =
+            if (uris.size <= 1) upstream
+            else CdnFailoverDataSourceFactory(upstreamFactory = upstream, state = CdnFailoverState(kind = kind, candidates = uris))
+        val factory =
+            if (accelerateVod && BiliClient.prefs.playerBtrEnabled && uris.isNotEmpty()) {
+                ParallelRangeDataSource.Factory(
+                    client = client,
+                    candidates = uris,
+                    maxConnections = if (kind == DebugStreamKind.AUDIO) 2 else BiliClient.prefs.playerBtrConnections,
+                    fallbackFactory = fallback,
+                )
+            } else fallback
+        return DataSource.Factory { factory.createDataSource().also { it.addTransferListener(listener) } }
     }
 
     private fun buildMerged(
@@ -494,6 +507,7 @@ internal class ExoPlayerEngine(
                     kind = DebugStreamKind.VIDEO,
                     urlCandidates = video.videoUrlCandidates,
                     mediaRequestProfile = video.videoMediaRequestProfile,
+                    accelerateVod = true,
                 )
         }
         routeFactories[dash.audioUrl] =
@@ -501,6 +515,7 @@ internal class ExoPlayerEngine(
                 kind = DebugStreamKind.AUDIO,
                 urlCandidates = dash.audioUrlCandidates,
                 mediaRequestProfile = dash.audioMediaRequestProfile,
+                accelerateVod = true,
             )
 
         val routedHttpFactory =
@@ -624,12 +639,14 @@ internal class ExoPlayerEngine(
                         DebugStreamKind.VIDEO,
                         urlCandidates = playable.videoUrlCandidates,
                         mediaRequestProfile = playable.videoMediaRequestProfile,
+                        accelerateVod = true,
                     )
                 val audioFactory =
                     createCdnFactory(
                         DebugStreamKind.AUDIO,
                         urlCandidates = playable.audioUrlCandidates,
                         mediaRequestProfile = playable.audioMediaRequestProfile,
+                        accelerateVod = true,
                     )
                 setMediaSource(
                     mediaSource = buildMerged(videoFactory, audioFactory, playable.videoUrl, playable.audioUrl, subtitle),
@@ -643,6 +660,7 @@ internal class ExoPlayerEngine(
                         DebugStreamKind.MAIN,
                         urlCandidates = playable.videoUrlCandidates,
                         mediaRequestProfile = playable.videoMediaRequestProfile,
+                        accelerateVod = true,
                     )
                 setMediaSource(
                     mediaSource = buildProgressive(mainFactory, playable.videoUrl, subtitle),
@@ -656,6 +674,7 @@ internal class ExoPlayerEngine(
                         DebugStreamKind.MAIN,
                         urlCandidates = playable.urlCandidates,
                         mediaRequestProfile = playable.mediaRequestProfile,
+                        accelerateVod = true,
                     )
                 setMediaSource(
                     mediaSource = buildProgressive(mainFactory, playable.url, subtitle),

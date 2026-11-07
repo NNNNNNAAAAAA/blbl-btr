@@ -28,68 +28,68 @@
         <activity
             android:name=".feature.player.PlayerActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
-            android:screenOrientation="sensorLandscape" />
+            android:screenOrientation="${playbackOrientation}" />
 
         <activity
             android:name=".feature.live.LivePlayerActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
-            android:screenOrientation="sensorLandscape" />
+            android:screenOrientation="${playbackOrientation}" />
 
 	        <activity
 	            android:name=".feature.settings.SettingsActivity"
-	            android:screenOrientation="sensorLandscape" />
+	            android:screenOrientation="${browseOrientation}" />
 	        <activity
 	            android:name=".feature.risk.GaiaVgateActivity"
 	            android:exported="false"
-	            android:screenOrientation="sensorLandscape" />
+	            android:screenOrientation="${browseOrientation}" />
 	        <activity
 	            android:name=".feature.login.QrLoginActivity"
-	            android:screenOrientation="sensorLandscape" />
+	            android:screenOrientation="${browseOrientation}" />
 	        <activity
 	            android:name=".feature.following.FollowingListActivity"
-	            android:screenOrientation="sensorLandscape" />
+	            android:screenOrientation="${browseOrientation}" />
         <activity
             android:name=".feature.following.UpDetailActivity"
-            android:screenOrientation="sensorLandscape" />
+            android:screenOrientation="${browseOrientation}" />
 
         <activity
             android:name=".feature.video.VideoDetailActivity"
-            android:screenOrientation="sensorLandscape" />
+            android:screenOrientation="${browseOrientation}" />
 
         <activity
             android:name=".feature.video.RegionDetailActivity"
-            android:screenOrientation="sensorLandscape" />
+            android:screenOrientation="${browseOrientation}" />
 
         <activity
             android:name=".feature.tag.TagDetailActivity"
-            android:screenOrientation="sensorLandscape" />
+            android:screenOrientation="${browseOrientation}" />
 
         <activity
             android:name=".feature.my.BangumiDetailActivity"
-            android:screenOrientation="sensorLandscape" />
+            android:screenOrientation="${browseOrientation}" />
 
         <activity
             android:name=".ui.MainActivity"
             android:banner="@drawable/tv_banner"
             android:exported="true"
-            android:screenOrientation="sensorLandscape" />
+            android:screenOrientation="${browseOrientation}" />
 
         <activity
             android:name=".ui.SplashDarkActivity"
             android:banner="@drawable/tv_banner"
-            android:screenOrientation="sensorLandscape"
+            android:screenOrientation="${browseOrientation}"
             android:theme="@style/Theme.Blbl.Launcher.Dark" />
 
         <activity
             android:name=".ui.SplashTvPinkActivity"
             android:banner="@drawable/tv_banner"
-            android:screenOrientation="sensorLandscape"
+            android:screenOrientation="${browseOrientation}"
             android:theme="@style/Theme.Blbl.Launcher.TvPink" />
 
         <activity
             android:name=".ui.SplashTvPinkIllustrationActivity"
             android:banner="@drawable/tv_banner"
-            android:screenOrientation="sensorLandscape"
+            android:screenOrientation="${browseOrientation}"
             android:theme="@style/Theme.Blbl.Launcher.TvPinkIllustration" />
 
         <activity-alias

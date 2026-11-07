@@ -10,6 +10,7 @@ import android.view.ViewGroup.MarginLayoutParams
 import androidx.appcompat.view.ContextThemeWrapper
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
+import blbl.cat3399.BuildConfig
 import blbl.cat3399.R
 import blbl.cat3399.core.net.BiliClient
 import blbl.cat3399.core.prefs.AppPrefs
@@ -391,6 +392,7 @@ internal object PlayerUiMode {
             }
         }
         applyBufferingOverlaySizing(binding = binding, scaledPx = ::scaledPx, scaledPxF = ::scaledPxF)
+        applyPhoneViewportSizing(binding)
     }
 
     fun applyLive(activity: Activity, binding: ActivityPlayerBinding) {
@@ -522,6 +524,24 @@ internal object PlayerUiMode {
             binding.tvSeekHint.setPadding(hintPadH, hintPadV, hintPadH, hintPadV)
         }
         applyBufferingOverlaySizing(binding = binding, scaledPx = ::scaledPx, scaledPxF = ::scaledPxF)
+        applyPhoneViewportSizing(binding)
+    }
+
+    fun watchPhoneViewport(binding: ActivityPlayerBinding) {
+        if (!BuildConfig.PHONE_PORTRAIT) return
+        binding.root.addOnLayoutChangeListener { _, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
+            if (right - left != oldRight - oldLeft || bottom - top != oldBottom - oldTop) {
+                applyPhoneViewportSizing(binding)
+            }
+        }
+    }
+
+    private fun applyPhoneViewportSizing(binding: ActivityPlayerBinding) {
+        if (!BuildConfig.PHONE_PORTRAIT || binding.root.width <= 0) return
+        val margins = binding.tvSeekHint.layoutParams as? MarginLayoutParams
+        val availableWidth = binding.root.width - binding.root.paddingLeft - binding.root.paddingRight -
+            (margins?.marginStart ?: 0) - (margins?.marginEnd ?: 0)
+        binding.tvSeekHint.maxWidth = availableWidth.coerceAtLeast(1)
     }
 
     private fun applyBufferingOverlaySizing(
@@ -706,7 +726,8 @@ internal object PlayerUiMode {
         ) {
             applyMargins(panel, baseMargins)
             val lp = panel.layoutParams as? MarginLayoutParams ?: return
-            val w = scaledPx(baseWidthPx).coerceAtLeast(1)
+            // The phone overlay uses match-constraint width with a 420dp cap.
+            val w = if (BuildConfig.PHONE_PORTRAIT) 0 else scaledPx(baseWidthPx).coerceAtLeast(1)
             if (lp.width != w) {
                 lp.width = w
                 panel.layoutParams = lp

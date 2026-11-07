@@ -462,6 +462,18 @@ class SettingsRenderer(
                     ),
                     SettingEntry(SettingId.PlayerCdnPreference, "CDN线路", SettingsText.cdnText(prefs.playerCdnPreference), null),
                     SettingEntry(
+                        SettingId.PlayerBtrEnabled,
+                        "BTR 多线程加速",
+                        if (prefs.playerBtrEnabled) "开" else "关",
+                        "仅 ExoPlayer 视频/番剧点播生效，直播和 Ijk 不生效；重新打开视频后应用",
+                    ),
+                    SettingEntry(
+                        SettingId.PlayerBtrConnections,
+                        "BTR 并发连接数",
+                        "${prefs.playerBtrConnections} 条",
+                        "电视建议 4 条，性能较弱选 2 条；重新打开视频后应用",
+                    ),
+                    SettingEntry(
                         SettingId.LiveHighBitrateEnabled,
                         "提高直播码率",
                         if (prefs.liveHighBitrateEnabled) "开" else "关",
@@ -507,9 +519,9 @@ class SettingsRenderer(
                     playerKernelEntry(),
                     SettingEntry(
                         SettingId.AutoUpdateCheckEnabled,
-                        "自动检查更新",
+                        "自动检查 BTR 更新",
                         if (prefs.autoUpdateCheckEnabled) "开" else "关",
-                        "启动时后台检查，有新版本才提示",
+                        "启动时检查 GitHub Release，按当前版本和设备架构选择更新包",
                     ),
                     aboutUpdateEntry(),
                 )
@@ -573,7 +585,7 @@ class SettingsRenderer(
     private fun aboutUpdateEntry(): SettingEntry {
         val currentVersion = BuildConfig.VERSION_NAME
         val title = "检查更新"
-        val defaultDesc = "检查新版本并下载安装"
+        val defaultDesc = "检查 GitHub Release 中适合当前设备的 BTR 更新"
         return when (val checkState = state.testUpdateCheckState) {
             TestUpdateCheckState.Idle -> SettingEntry(SettingId.CheckUpdate, title, "点击检查", defaultDesc)
             TestUpdateCheckState.Checking -> SettingEntry(SettingId.CheckUpdate, title, "检查中…", "正在获取更新日志…")

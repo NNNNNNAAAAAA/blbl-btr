@@ -3,9 +3,13 @@ package blbl.cat3399.core.ui
 import android.app.Activity
 import android.content.Context
 import android.os.Build
+import android.view.View
 import android.view.Window
 import android.view.WindowManager
+import androidx.core.graphics.Insets
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.ViewCompat
+import blbl.cat3399.BuildConfig
 import androidx.core.view.WindowCompat
 import blbl.cat3399.core.net.BiliClient
 import blbl.cat3399.core.prefs.AppPrefs
@@ -20,7 +24,24 @@ object WindowDisplayPolicy {
         val window = activity.window ?: return
         val options = currentOptions(activity).copy(fullscreen = fullscreen)
         applyCutoutMode(window, options)
-        WindowCompat.setDecorFitsSystemWindows(window, !fullscreen)
+        WindowCompat.setDecorFitsSystemWindows(window, !BuildConfig.PHONE_PORTRAIT && !fullscreen)
+    }
+
+    fun installPhoneInsets(activity: Activity) {
+        if (!BuildConfig.PHONE_PORTRAIT) return
+        val content = activity.findViewById<View>(android.R.id.content) ?: return
+        WindowCompat.setDecorFitsSystemWindows(activity.window, false)
+        ViewCompat.setOnApplyWindowInsetsListener(content) { view, insets ->
+            val safeTypes = WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
+            val safe = insets.getInsets(safeTypes)
+            val keyboard = insets.getInsets(WindowInsetsCompat.Type.ime())
+            view.setPadding(safe.left, safe.top, safe.right, maxOf(safe.bottom, keyboard.bottom))
+            // Child dialogs share this already-inset content root.
+            WindowInsetsCompat.Builder(insets)
+                .setInsets(safeTypes or WindowInsetsCompat.Type.ime(), Insets.NONE)
+                .build()
+        }
+        ViewCompat.requestApplyInsets(content)
     }
 
     fun reapply(activity: Activity) {

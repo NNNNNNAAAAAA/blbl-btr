@@ -9,6 +9,7 @@ import androidx.core.view.isVisible
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import blbl.cat3399.BuildConfig
 import blbl.cat3399.core.model.VideoTag
 import blbl.cat3399.core.image.ImageLoader
 import blbl.cat3399.core.image.ImageUrl
@@ -18,6 +19,7 @@ import blbl.cat3399.databinding.ItemVideoDetailHeaderBinding
 import blbl.cat3399.feature.player.HoldToTriggerController
 import com.google.android.material.chip.Chip
 import java.lang.ref.WeakReference
+import kotlin.math.roundToInt
 
 private const val DESC_COLLAPSED_TEXT_LINES = 4
 
@@ -627,16 +629,22 @@ class VideoDetailHeaderAdapter(
             val params = binding.clCoverContainer.layoutParams as? ConstraintLayout.LayoutParams ?: return
             val targetRatio = if (usePosterCover) "9:16" else "16:9"
             val targetWidthPx =
-                binding.root.resources.getDimensionPixelSize(
-                    if (usePosterCover) {
-                        blbl.cat3399.R.dimen.video_detail_header_cover_width_poster
-                    } else {
-                        blbl.cat3399.R.dimen.video_detail_header_cover_width
-                    },
-                )
-            if (params.dimensionRatio == targetRatio && params.width == targetWidthPx) return
+                if (BuildConfig.PHONE_PORTRAIT) {
+                    if (usePosterCover) (160f * binding.root.resources.displayMetrics.density).roundToInt() else 0
+                } else {
+                    binding.root.resources.getDimensionPixelSize(
+                        if (usePosterCover) {
+                            blbl.cat3399.R.dimen.video_detail_header_cover_width_poster
+                        } else {
+                            blbl.cat3399.R.dimen.video_detail_header_cover_width
+                        },
+                    )
+                }
+            val targetHeightPx = if (BuildConfig.PHONE_PORTRAIT) 0 else params.height
+            if (params.dimensionRatio == targetRatio && params.width == targetWidthPx && params.height == targetHeightPx) return
             params.dimensionRatio = targetRatio
             params.width = targetWidthPx
+            params.height = targetHeightPx
             binding.clCoverContainer.layoutParams = params
         }
 

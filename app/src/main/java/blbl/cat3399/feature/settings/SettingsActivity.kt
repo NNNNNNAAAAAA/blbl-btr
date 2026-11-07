@@ -1,6 +1,7 @@
 package blbl.cat3399.feature.settings
 
 import android.net.Uri
+import blbl.cat3399.BuildConfig
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.View
@@ -72,7 +73,11 @@ class SettingsActivity : BaseActivity() {
         binding.btnBack.setOnClickListener { finish() }
 
         leftAdapter = SettingsLeftAdapter { index -> renderer.showSection(index, keepScroll = false) }
-        binding.recyclerLeft.layoutManager = LinearLayoutManager(this)
+        binding.recyclerLeft.layoutManager = LinearLayoutManager(
+            this,
+            if (BuildConfig.PHONE_PORTRAIT) RecyclerView.HORIZONTAL else RecyclerView.VERTICAL,
+            false,
+        )
         binding.recyclerLeft.itemAnimator = null
         binding.recyclerLeft.adapter = leftAdapter
         leftAdapter.submit(sections, selected = 0)

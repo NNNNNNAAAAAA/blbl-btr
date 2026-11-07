@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SimpleItemAnimator
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
+import blbl.cat3399.BuildConfig
 import blbl.cat3399.R
 import blbl.cat3399.core.net.BiliClient
 import blbl.cat3399.core.paging.PagedGridStateMachine
@@ -742,6 +743,10 @@ class SearchRenderer internal constructor(
     }
 
     fun focusFirstKey() {
+        if (BuildConfig.PHONE_PORTRAIT) {
+            binding.tvQuery.requestFocus()
+            return
+        }
         val recycler = binding.recyclerKeys
         recycler.postIfAlive(isAlive = { !released }) {
             recycler.findViewHolderForAdapterPosition(0)?.itemView?.requestFocus()

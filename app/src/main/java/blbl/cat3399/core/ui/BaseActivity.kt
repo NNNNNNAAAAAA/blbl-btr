@@ -25,6 +25,7 @@ open class BaseActivity : AppCompatActivity() {
         }
         restoredState = sanitizeSavedInstanceState(savedInstanceState)
         super.onCreate(restoredState)
+        WindowDisplayPolicy.installPhoneInsets(this)
         createdUiScaleFactor = UiScale.factor(this)
     }
 

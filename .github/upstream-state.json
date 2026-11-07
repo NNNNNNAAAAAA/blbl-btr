@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "blbl": {
+    "repository": "cat3399/blbl",
+    "branch": "main",
+    "merged_sha": "cd09bd903e6d0c22f5986580c2105796d8df6471",
+    "legal_review_sha": "cd09bd903e6d0c22f5986580c2105796d8df6471"
+  },
+  "btr": {
+    "repository": "MrTangLuyao/Bilibili-thread-ripper",
+    "branch": "main",
+    "native_reference_sha": "ea3e940c400ceac338f3eea00281249c96966d0c",
+    "observed_sha": "ea3e940c400ceac338f3eea00281249c96966d0c",
+    "legal_review_sha": "ea3e940c400ceac338f3eea00281249c96966d0c"
+  }
+}

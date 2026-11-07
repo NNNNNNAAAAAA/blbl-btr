@@ -1,6 +1,7 @@
 package blbl.cat3399.core.prefs
 
 import android.content.Context
+import blbl.cat3399.BuildConfig
 import android.provider.Settings
 import blbl.cat3399.core.api.SponsorBlockCategories
 import blbl.cat3399.core.tv.isTvDevice
@@ -414,6 +415,14 @@ class AppPrefs(context: Context) {
         get() = prefs.getString(KEY_PLAYER_CDN_PREFERENCE, PLAYER_CDN_BILIVIDEO) ?: PLAYER_CDN_BILIVIDEO
         set(value) = prefs.edit().putString(KEY_PLAYER_CDN_PREFERENCE, value).apply()
 
+    var playerBtrEnabled: Boolean
+        get() = prefs.getBoolean(KEY_PLAYER_BTR_ENABLED, true)
+        set(value) = prefs.edit().putBoolean(KEY_PLAYER_BTR_ENABLED, value).apply()
+
+    var playerBtrConnections: Int
+        get() = prefs.getInt(KEY_PLAYER_BTR_CONNECTIONS, 8).takeIf { it == 2 || it == 4 || it == 8 } ?: 8
+        set(value) = prefs.edit().putInt(KEY_PLAYER_BTR_CONNECTIONS, value.takeIf { it == 2 || it == 4 || it == 8 } ?: 8).apply()
+
     /**
      * When enabled, try to rewrite live m3u8 urls to remove Bilibili's transcoding suffix
      * (e.g. `_2500`, `_bluray`) in order to fetch the origin stream and get higher bitrate.
@@ -599,7 +608,7 @@ class AppPrefs(context: Context) {
         set(value) = prefs.edit().putBoolean(KEY_PLAYER_OPEN_DETAIL_BEFORE_PLAY, value).apply()
 
     var fullscreenEnabled: Boolean
-        get() = prefs.getBoolean(KEY_FULLSCREEN, true)
+        get() = prefs.getBoolean(KEY_FULLSCREEN, !BuildConfig.PHONE_PORTRAIT)
         set(value) = prefs.edit().putBoolean(KEY_FULLSCREEN, value).apply()
 
     var avoidDisplayCutout: Boolean
@@ -607,7 +616,7 @@ class AppPrefs(context: Context) {
         set(value) = prefs.edit().putBoolean(KEY_AVOID_DISPLAY_CUTOUT, value).apply()
 
     var tabSwitchFollowsFocus: Boolean
-        get() = prefs.getBoolean(KEY_TAB_SWITCH_FOLLOWS_FOCUS, true)
+        get() = prefs.getBoolean(KEY_TAB_SWITCH_FOLLOWS_FOCUS, !BuildConfig.PHONE_PORTRAIT)
         set(value) = prefs.edit().putBoolean(KEY_TAB_SWITCH_FOLLOWS_FOCUS, value).apply()
 
     var mainAutoHideSidebarOnEnterContent: Boolean
@@ -838,27 +847,29 @@ class AppPrefs(context: Context) {
 
     var gridSpanCount: Int
         get() {
-            val stored = prefs.getInt(KEY_GRID_SPAN, 4)
-            val span = if (stored <= 0) 4 else stored
+            val defaultSpan = if (BuildConfig.PHONE_PORTRAIT) 1 else 4
+            val stored = prefs.getInt(KEY_GRID_SPAN, defaultSpan)
+            val span = if (stored <= 0) defaultSpan else stored
             return span.coerceIn(1, 6)
         }
         set(value) {
-            val span = if (value <= 0) 4 else value
+            val span = if (value <= 0) (if (BuildConfig.PHONE_PORTRAIT) 1 else 4) else value
             prefs.edit().putInt(KEY_GRID_SPAN, span.coerceIn(1, 6)).apply()
         }
 
     var dynamicGridSpanCount: Int
-        get() = prefs.getInt(KEY_DYNAMIC_GRID_SPAN, 3)
+        get() = prefs.getInt(KEY_DYNAMIC_GRID_SPAN, if (BuildConfig.PHONE_PORTRAIT) 1 else 3)
         set(value) = prefs.edit().putInt(KEY_DYNAMIC_GRID_SPAN, value).apply()
 
     var pgcGridSpanCount: Int
         get() {
-            val stored = prefs.getInt(KEY_PGC_GRID_SPAN, 6)
-            val span = if (stored <= 0) 6 else stored
+            val defaultSpan = if (BuildConfig.PHONE_PORTRAIT) 2 else 6
+            val stored = prefs.getInt(KEY_PGC_GRID_SPAN, defaultSpan)
+            val span = if (stored <= 0) defaultSpan else stored
             return span.coerceIn(1, 6)
         }
         set(value) {
-            val span = if (value <= 0) 6 else value
+            val span = if (value <= 0) (if (BuildConfig.PHONE_PORTRAIT) 2 else 6) else value
             prefs.edit().putInt(KEY_PGC_GRID_SPAN, span.coerceIn(1, 6)).apply()
         }
 
@@ -1101,6 +1112,8 @@ class AppPrefs(context: Context) {
         private const val KEY_PLAYER_STYLE = "player_style"
         private const val KEY_PLAYER_AUDIO_ID = "player_audio_id"
         private const val KEY_PLAYER_CDN_PREFERENCE = "player_cdn_preference"
+        private const val KEY_PLAYER_BTR_ENABLED = "player_btr_enabled"
+        private const val KEY_PLAYER_BTR_CONNECTIONS = "player_btr_connections"
         private const val KEY_LIVE_HIGH_BITRATE_ENABLED = "live_high_bitrate_enabled"
         private const val KEY_SUBTITLE_LANG = "subtitle_lang"
         private const val KEY_SUBTITLE_ENABLED_DEFAULT = "subtitle_enabled_default"

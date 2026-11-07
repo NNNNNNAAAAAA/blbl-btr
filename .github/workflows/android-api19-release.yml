@@ -1,4 +1,4 @@
-name: Android API19 Release
+name: Upstream Android API19 Release
 
 on:
   workflow_dispatch:
@@ -16,6 +16,7 @@ permissions:
 
 jobs:
   build-api19-release:
+    if: github.repository == 'cat3399/blbl'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

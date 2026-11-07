@@ -4,6 +4,12 @@ plugins {
     id("com.google.protobuf")
 }
 
+val phonePortraitBuild = providers.gradleProperty("phonePortrait").orNull == "true"
+val unsignedReleaseBuild = providers.gradleProperty("unsignedRelease").orNull == "true"
+if (phonePortraitBuild) {
+    layout.buildDirectory.set(layout.projectDirectory.dir("build/phone"))
+}
+
 android {
     namespace = "blbl.cat3399"
     compileSdk = 36
@@ -17,7 +23,10 @@ android {
     }
 
     defaultConfig {
-        applicationId = "blbl.cat3399"
+        applicationId = if (phonePortraitBuild) "blbl.cat3399.btr.phone" else "blbl.cat3399.btr"
+        buildConfigField("boolean", "PHONE_PORTRAIT", phonePortraitBuild.toString())
+        manifestPlaceholders["browseOrientation"] = if (phonePortraitBuild) "portrait" else "sensorLandscape"
+        manifestPlaceholders["playbackOrientation"] = if (phonePortraitBuild) "fullSensor" else "sensorLandscape"
         minSdk = 21
         targetSdk = 36
         versionCode = (project.findProperty("versionCode") as String?)?.toInt() ?: 1
@@ -26,6 +35,20 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+    }
+
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            if (phonePortraitBuild) include("arm64-v8a") else include("armeabi-v7a", "arm64-v8a")
+            isUniversalApk = false
+        }
+    }
+
+    if (phonePortraitBuild) {
+        sourceSets.getByName("debug").res.srcDir("src/phone/res")
+        sourceSets.getByName("release").res.srcDir("src/phone/res")
     }
 
     signingConfigs {
@@ -44,7 +67,7 @@ android {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
-            signingConfig = signingConfigs.getByName("release")
+            signingConfig = if (unsignedReleaseBuild) null else signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
@@ -138,6 +161,8 @@ dependencies {
     implementation("com.google.zxing:core:3.5.3")
 
     testImplementation("junit:junit:4.13.2")
+    testImplementation("org.json:json:20240303")
+    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
 }
 

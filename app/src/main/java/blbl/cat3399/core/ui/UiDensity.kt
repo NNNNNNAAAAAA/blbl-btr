@@ -1,6 +1,7 @@
 package blbl.cat3399.core.ui
 
 import android.content.Context
+import blbl.cat3399.BuildConfig
 import android.content.res.Configuration
 import android.util.DisplayMetrics
 import kotlin.math.min
@@ -19,6 +20,7 @@ import kotlin.math.roundToInt
  */
 object UiDensity {
     fun wrap(base: Context): Context {
+        if (BuildConfig.PHONE_PORTRAIT) return base
         val res = base.resources
         val dm = res.displayMetrics
 

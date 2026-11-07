@@ -10,6 +10,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import blbl.cat3399.BuildConfig
 import blbl.cat3399.R
 import blbl.cat3399.core.api.BiliApi
 import blbl.cat3399.core.log.AppLog
@@ -107,13 +108,18 @@ class DynamicFragment : Fragment(), RefreshKeyHandler, BackPressHandler {
         val binding = _binding ?: return
 
         followAdapter = FollowingAdapter(::onFollowingClicked)
-        binding.recyclerFollowing.layoutManager = LinearLayoutManager(requireContext())
+        binding.recyclerFollowing.layoutManager =
+            LinearLayoutManager(
+                requireContext(),
+                if (BuildConfig.PHONE_PORTRAIT) LinearLayoutManager.HORIZONTAL else LinearLayoutManager.VERTICAL,
+                false,
+            )
         binding.recyclerFollowing.adapter = followAdapter
         binding.recyclerFollowing.clearOnScrollListeners()
         binding.recyclerFollowing.addOnScrollListener(
             object : RecyclerView.OnScrollListener() {
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                    if (dy <= 0) return
+                    if (if (BuildConfig.PHONE_PORTRAIT) dx <= 0 else dy <= 0) return
                     if (followIsLoadingMore || followEndReached) return
                     val lm = recyclerView.layoutManager as? LinearLayoutManager ?: return
                     val lastVisible = lm.findLastVisibleItemPosition()
@@ -149,7 +155,7 @@ class DynamicFragment : Fragment(), RefreshKeyHandler, BackPressHandler {
                     },
                 config =
                     DpadGridController.Config(
-                        isEnabled = { _binding != null && isResumed },
+                        isEnabled = { !BuildConfig.PHONE_PORTRAIT && _binding != null && isResumed },
                         consumeRightEdge = false,
                     ),
             ).also { it.install() }
@@ -622,6 +628,7 @@ class DynamicFragment : Fragment(), RefreshKeyHandler, BackPressHandler {
     }
 
     private fun applyUiMode() {
+        if (BuildConfig.PHONE_PORTRAIT) return
         val binding = _binding ?: return
         val uiScale = UiScale.factor(requireContext())
         val scaler = requireContext().uiScaler(uiScale)

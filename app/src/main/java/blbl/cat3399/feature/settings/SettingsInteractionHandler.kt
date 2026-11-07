@@ -757,7 +757,7 @@ class SettingsInteractionHandler(
 
             SettingId.AutoUpdateCheckEnabled -> {
                 prefs.autoUpdateCheckEnabled = !prefs.autoUpdateCheckEnabled
-                AppToast.show(activity, "自动检查更新：${if (prefs.autoUpdateCheckEnabled) "开" else "关"}")
+                AppToast.show(activity, "自动检查 BTR 更新：${if (prefs.autoUpdateCheckEnabled) "开" else "关"}")
                 renderer.refreshSection(entry.id)
             }
 
@@ -1253,6 +1253,25 @@ class SettingsInteractionHandler(
                 }
             }
 
+            SettingId.PlayerBtrEnabled -> {
+                prefs.playerBtrEnabled = !prefs.playerBtrEnabled
+                AppToast.show(activity, "BTR 多线程加速：${if (prefs.playerBtrEnabled) "开" else "关"}，重新打开视频后生效")
+                renderer.refreshSection(entry.id)
+            }
+
+            SettingId.PlayerBtrConnections -> {
+                val options = listOf(2, 4, 8)
+                showChoiceDialog(
+                    title = "BTR 并发连接数",
+                    items = options.map { "$it 条" },
+                    checkedIndex = options.indexOf(prefs.playerBtrConnections).coerceAtLeast(0),
+                ) { selected ->
+                    options.firstOrNull { "$it 条" == selected }?.let { prefs.playerBtrConnections = it }
+                    AppToast.show(activity, "重新打开视频后生效")
+                    renderer.refreshSection(entry.id)
+                }
+            }
+
             SettingId.PlayerSpeed -> {
                 val options = PlaybackSettingChoices.playbackSpeeds
                 showChoiceDialog(
@@ -1583,16 +1602,12 @@ class SettingsInteractionHandler(
 
             SettingId.CheckUpdate -> {
                 when (val checkState = state.testUpdateCheckState) {
-                    TestUpdateCheckState.Checking -> {
-                        AppToast.show(activity, "正在检查更新…")
-                    }
-
+                    TestUpdateCheckState.Checking -> AppToast.show(activity, "正在检查更新…")
                     is TestUpdateCheckState.UpdateAvailable -> {
                         ApkUpdateFlow.showUpdatePrompt(activity, checkState.update) { selectedUpdate ->
-                            startTestUpdateDownload(selectedUpdate.versionName)
+                            startTestUpdateDownload(selectedUpdate)
                         }
                     }
-
                     else -> ensureTestUpdateChecked(force = true, refreshUi = true, promptIfUpdate = true)
                 }
             }
@@ -2788,9 +2803,8 @@ class SettingsInteractionHandler(
                 try {
                     val update = ApkUpdater.fetchLatestUpdate()
                     val latest = update.versionName
-                    val current = BuildConfig.VERSION_NAME
                     state.testUpdateCheckState =
-                        if (ApkUpdater.isRemoteNewer(latest, current)) {
+                        if (ApkUpdater.isRemoteNewer(update)) {
                             TestUpdateCheckState.UpdateAvailable(update)
                         } else {
                             TestUpdateCheckState.Latest(latest)
@@ -2798,7 +2812,7 @@ class SettingsInteractionHandler(
                     state.testUpdateCheckedAtMs = System.currentTimeMillis()
                     if (promptIfUpdate && state.testUpdateCheckState is TestUpdateCheckState.UpdateAvailable) {
                         ApkUpdateFlow.showUpdatePrompt(activity, update) { selectedUpdate ->
-                            startTestUpdateDownload(selectedUpdate.versionName)
+                            startTestUpdateDownload(selectedUpdate)
                         }
                     }
                 } catch (_: CancellationException) {
@@ -2811,7 +2825,7 @@ class SettingsInteractionHandler(
             }
     }
 
-    private fun startTestUpdateDownload(latestVersionHint: String? = null) {
+    private fun startTestUpdateDownload(update: ApkUpdater.RemoteUpdate? = null) {
         if (testUpdateJob?.isActive == true) {
             AppToast.show(activity, "正在下载更新…")
             return
@@ -2820,10 +2834,9 @@ class SettingsInteractionHandler(
         testUpdateJob =
             ApkUpdateFlow.startDownloadAndInstall(
                 activity = activity,
-                latestVersionHint = latestVersionHint,
-                apkUrl = latestVersionHint?.let(ApkUpdater::apkUrlFor),
+                update = update,
             ) { latestVersion, isNewer ->
-                if (!isNewer && latestVersionHint == null) state.testUpdateCheckState = TestUpdateCheckState.Latest(latestVersion)
+                if (!isNewer && update == null) state.testUpdateCheckState = TestUpdateCheckState.Latest(latestVersion)
                 state.testUpdateCheckedAtMs = System.currentTimeMillis()
                 renderer.refreshAboutSectionKeepPosition()
             }

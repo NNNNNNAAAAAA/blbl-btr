@@ -972,7 +972,7 @@ class MainActivity : BaseActivity(), SidebarFocusHost {
             lifecycleScope.launch {
                 try {
                     val update = ApkUpdater.fetchLatestUpdate()
-                    if (!ApkUpdater.isRemoteNewer(update.versionName, BuildConfig.VERSION_NAME)) return@launch
+                    if (!ApkUpdater.isRemoteNewer(update)) return@launch
                     if (BiliClient.prefs.autoUpdateIgnoredVersionName == update.versionName) return@launch
                     pendingAutoUpdate = update
                     showAutoUpdatePromptIfReady()
@@ -993,7 +993,7 @@ class MainActivity : BaseActivity(), SidebarFocusHost {
         if (autoUpdatePromptPopup?.isShowing == true) return
 
         val update = pendingAutoUpdate ?: return
-        if (!ApkUpdater.isRemoteNewer(update.versionName, BuildConfig.VERSION_NAME)) return
+        if (!ApkUpdater.isRemoteNewer(update)) return
         if (BiliClient.prefs.autoUpdateIgnoredVersionName == update.versionName) return
         if (autoUpdatePromptShownVersion == update.versionName) return
         autoUpdatePromptShownVersion = update.versionName
@@ -1009,8 +1009,7 @@ class MainActivity : BaseActivity(), SidebarFocusHost {
             ) { selectedUpdate ->
                 ApkUpdateFlow.startDownloadAndInstall(
                     activity = this,
-                    latestVersionHint = selectedUpdate.versionName,
-                    apkUrl = ApkUpdater.apkUrlFor(selectedUpdate.versionName),
+                    update = selectedUpdate,
                 )
             }
     }

@@ -3,6 +3,7 @@
 package blbl.cat3399.feature.live
 
 import android.content.Intent
+import android.content.res.Configuration
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -220,6 +221,7 @@ class LivePlayerActivity : BaseActivity() {
                 beforeOpenUpDetail = { prepareTransientPlaybackExit() },
             )
         setContentView(binding.root)
+        PlayerUiMode.watchPhoneViewport(binding)
         Immersive.apply(this, prefs.fullscreenEnabled)
         PlayerUiMode.applyLive(this, binding)
         resetBufferingOverlayState()
@@ -488,6 +490,15 @@ class LivePlayerActivity : BaseActivity() {
         val engine = player ?: return
         if (shouldResume) {
             engine.playWhenReady = true
+        }
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        if (!BuildConfig.PHONE_PORTRAIT) return
+        // The existing player and its position survive rotation; only the overlays are resized.
+        binding.root.post {
+            PlayerUiMode.applyLive(this, binding)
         }
     }
 
