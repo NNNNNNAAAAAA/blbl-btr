@@ -7,9 +7,10 @@ import androidx.core.view.WindowInsetsControllerCompat
 object Immersive {
     fun apply(activity: Activity, enabled: Boolean) {
         val window = activity.window ?: return
-        WindowDisplayPolicy.applyWindow(activity, fullscreen = enabled)
+        val fullscreen = enabled || WindowDisplayPolicy.isPhoneLandscapePlayback(activity)
+        WindowDisplayPolicy.applyWindow(activity, fullscreen = fullscreen)
         val controller = WindowInsetsControllerCompat(window, window.decorView)
-        if (enabled) {
+        if (fullscreen) {
             controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             controller.hide(WindowInsetsCompat.Type.systemBars())
         } else {

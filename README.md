@@ -14,6 +14,10 @@
 
 手机浏览、详情、设置和登录界面使用竖屏布局，视频、直播播放页支持随设备旋转。手机与电视包名独立，可与原版并存；首次安装各版本时需要重新登录。处理器支持 64 位但系统只有 32 位时，应安装电视 ARMv7 包。
 
+## Android TV 快捷启动
+
+电视版支持 `blbl.cat3399.btr://open`，直接打开应用首页。可在 Android TV 遥控器或盒子助手中把它设为应用快捷链接；手机版本对应 `blbl.cat3399.btr.phone://open`。普通桌面启动入口继续保留。后续覆盖更新也保留相同入口。
+
 ## 点播加速
 
 - 仅对 **ExoPlayer 的视频、番剧点播**生效，不含直播加速、Ijk 加速或浏览器播放器接管、悬浮球等功能。
@@ -30,17 +34,13 @@
 
 早期仅支持手动更新的 BTR 安装包，需要先手动覆盖安装一次支持此更新源的版本。调试签名与发布签名不能互相覆盖；持续更新必须复用同一发布密钥。
 
-## 两个上游的自动维护
+## 上游维护与发布
 
-`.github/workflows/btr-upstream-release.yml` 配置为每小时第 17 分钟检查上游，也可在 Actions 手动运行；首次发布或需要重建当前代码时使用 `workflow_dispatch` 的 `force` 选项。默认分支上的 `app/**` 或构建代码更新也会进入发布检查；仅提交观察状态或报告不会循环触发 APK 发布。
+云端 BTR 自动发布工作流保持停用，签名私钥、别名和密码仅保存在本地。本次快捷入口更新在本地隔离工作副本构建、验证和签名，再发布到 GitHub Releases；应用仍通过上述 GitHub 更新清单检查更新。公开此次版本不代表启用云端定时发布，也不需要上传签名材料。
 
-1. **blbl 更新**：尝试合入新的上游提交，同时保留本分支的加速、手机适配和自动化。合并冲突、许可 / 免责声明相关文件发生变化，或检查失败时停止自动发布，留下日志供维护者处理。
-2. **BTR 更新**：先生成 `.github/btr-adaptation-report.md` 待适配报告、Actions 摘要及对应 artifact。**仅有 BTR 新提交时，不把旧 Kotlin 实现重编成“已升级内核”的新 APK。**维护者完成原生 Kotlin 适配、更新参考提交并通过测试后，再发布。独立的 blbl 更新可继续构建，发行说明须保留实际原生参考版本。
-3. **构建与发布**：候选代码检查、三个 APK 构建、签名和产物校验全部成功才发布 Release；任一步失败就停发，不把失败构建作为应用更新。
+`.github/upstream-state.json` 区分 blbl 已合入提交、BTR 的 `observed_sha` 与 `native_reference_sha`。BTR 新提交先形成待适配报告，读取实际差异并完成适用逻辑的 Kotlin 移植与测试后，才能推进原生参考版本。仅观察到上游 JavaScript 变化不会重编发布“已升级内核”的 APK。本次原生参考仍为 `ea3e940c400ceac338f3eea00281249c96966d0c`，没有额外合并两个上游的新代码。
 
-`.github/upstream-state.json` 分别记录 `blbl.merged_sha`、BTR 的 `observed_sha` 与 `native_reference_sha`。`observed_sha` 只表示检测到了该提交；`native_reference_sha` 表示当前 Kotlin 实现实际参考的版本。两者不同，说明存在待评估 / 待移植变更。自动检查不能把浏览器 JavaScript 自动转换为原生 Kotlin，也不代表网页 BTR 的全部功能已经移植。
-
-GitHub 定时任务可能排队或延迟，只在默认分支运行；公开仓库长期没有活动时也可能被 GitHub 停用，需要在 Actions 重新启用。详见 [GitHub schedule 说明](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule)。
+后续合并应保留加速、快捷入口、手机竖屏与横屏适配、更新包匹配，以及完整来源和许可说明。发生合并冲突或许可、作者说明变化时停止对应更新，记录原因并核对原文。
 
 ## 本地构建
 
@@ -60,11 +60,11 @@ GitHub 定时任务可能排队或延迟，只在默认分支运行；公开仓�
 
 本地已完成的电视版本验证：正式构建、APK v1/v2 签名与 ZIP 对齐检查通过；`testDebugUnitTest` 共 101 项，100 项通过，新增加速核心的 10 项全部通过。唯一失败是上游已有的 `PlayerAutoNextTitleTest.truncatesTitlesToTwelveCharactersBeforeEllipsis`（实现为 18 字、测试要求 12 字），已用未修改的上游代码独立复现；这条记录不代表后续手机构建、CI 或实体设备测试全部通过。每次发行以相应 Actions 运行和 Release 记录为准。
 
-## 发布配置与密钥
+## 发布签名
 
-持续发布需要配置四项仓库 Secrets：`RELEASE_KEYSTORE_BASE64`、`RELEASE_STORE_PASSWORD`、`RELEASE_KEY_ALIAS`、`RELEASE_KEY_PASSWORD`。复用现有发布密钥，不能每次自动生成新签名；私钥、密码、本机 SDK 配置和 `.local/` 工具链不得提交到仓库或打入源码包。
+本次使用 `-PunsignedRelease=true` 构建三个未签名 APK，构建过程不接收发布私钥或密码。仅由可信的本地辅助逻辑调用官方 Android SDK 工具完成签名，复用已有发布证书；私钥、密码、本机 SDK 配置和 `.local/` 工具链不得提交到仓库或打入附件。
 
-自动化把候选代码构建、可信签名和发布分开：未签名构建任务不接收发布私钥；签名任务不执行候选项目的 Gradle；发布任务只接收已校验产物，不接收签名私钥。参见 [GitHub Actions 安全说明](https://docs.github.com/en/actions/reference/security/secure-use)和 [Android 应用签名说明](https://developer.android.com/studio/publish/app-signing)。
+发布前核对包名、profile、ABI、递增版本号、证书、哈希与 ZIP 对齐。APK、`update.json` 与 `SHA256SUMS` 就绪后一起发布，更新清单只指向实际存在的本仓库 Release 附件。用户仍通过 Android 安装界面确认覆盖安装。
 
 原 API19 与 Ijk 内核工作流作为上游维护资料保留。本仓库保留原作者说明和第三方归属；上游 blbl 未提供 LICENSE，不将整个项目重新声明为 MIT，也不声称已经取得原作者的额外分发授权。详见 [LICENSING.md](LICENSING.md) 和 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。下方完整保留原版说明，其中原版更新源不适用于本分支。
 

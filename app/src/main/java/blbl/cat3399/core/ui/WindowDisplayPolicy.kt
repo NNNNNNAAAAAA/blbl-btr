@@ -2,6 +2,7 @@ package blbl.cat3399.core.ui
 
 import android.app.Activity
 import android.content.Context
+import android.content.res.Configuration
 import android.os.Build
 import android.view.View
 import android.view.Window
@@ -15,6 +16,11 @@ import blbl.cat3399.core.net.BiliClient
 import blbl.cat3399.core.prefs.AppPrefs
 
 object WindowDisplayPolicy {
+    internal fun isPhoneLandscapePlayback(activity: Activity): Boolean =
+        BuildConfig.PHONE_PORTRAIT &&
+            (activity as? BaseActivity)?.phonePlaybackWindow == true &&
+            activity.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
     private data class Options(
         val fullscreen: Boolean,
         val avoidDisplayCutout: Boolean,
@@ -22,9 +28,13 @@ object WindowDisplayPolicy {
 
     fun applyWindow(activity: Activity, fullscreen: Boolean = currentOptions(activity).fullscreen) {
         val window = activity.window ?: return
-        val options = currentOptions(activity).copy(fullscreen = fullscreen)
+        val landscapePlayback = isPhoneLandscapePlayback(activity)
+        val options = currentOptions(activity).let {
+            it.copy(fullscreen = fullscreen || landscapePlayback,
+                avoidDisplayCutout = it.avoidDisplayCutout && !landscapePlayback)
+        }
         applyCutoutMode(window, options)
-        WindowCompat.setDecorFitsSystemWindows(window, !BuildConfig.PHONE_PORTRAIT && !fullscreen)
+        WindowCompat.setDecorFitsSystemWindows(window, !BuildConfig.PHONE_PORTRAIT && !options.fullscreen)
     }
 
     fun installPhoneInsets(activity: Activity) {
@@ -33,7 +43,9 @@ object WindowDisplayPolicy {
         WindowCompat.setDecorFitsSystemWindows(activity.window, false)
         ViewCompat.setOnApplyWindowInsetsListener(content) { view, insets ->
             val safeTypes = WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
-            val safe = insets.getInsets(safeTypes)
+            // Landscape playback draws across the whole display, including the cutout.
+            // Browsing and portrait playback still reserve the system-bar safe area.
+            val safe = if (isPhoneLandscapePlayback(activity)) Insets.NONE else insets.getInsets(safeTypes)
             val keyboard = insets.getInsets(WindowInsetsCompat.Type.ime())
             view.setPadding(safe.left, safe.top, safe.right, maxOf(safe.bottom, keyboard.bottom))
             // Child dialogs share this already-inset content root.

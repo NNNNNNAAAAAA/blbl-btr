@@ -115,6 +115,7 @@ import kotlin.math.abs
 import kotlin.math.roundToInt
 
 class PlayerActivity : BaseActivity() {
+    internal override val phonePlaybackWindow: Boolean get() = true
     override fun shouldRecreateOnUiScaleChange(): Boolean = true
 
     internal lateinit var binding: ActivityPlayerBinding
@@ -1418,6 +1419,7 @@ class PlayerActivity : BaseActivity() {
         if (!BuildConfig.PHONE_PORTRAIT) return
         // The existing player and its position survive rotation; only the overlays are resized.
         binding.root.post {
+            Immersive.apply(this, BiliClient.prefs.fullscreenEnabled)
             PlayerUiMode.applyVideo(this, binding)
             bottomBarFullConstraints = null
             ensureBottomBarConstraintSets()

@@ -72,7 +72,14 @@
             android:name=".ui.MainActivity"
             android:banner="@drawable/tv_banner"
             android:exported="true"
-            android:screenOrientation="${browseOrientation}" />
+            android:screenOrientation="${browseOrientation}">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="${applicationId}" android:host="open" />
+            </intent-filter>
+        </activity>
 
         <activity
             android:name=".ui.SplashDarkActivity"

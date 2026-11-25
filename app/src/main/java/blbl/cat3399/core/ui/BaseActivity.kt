@@ -10,6 +10,7 @@ import blbl.cat3399.core.log.AppLog
 import blbl.cat3399.core.theme.ThemePresets
 
 open class BaseActivity : AppCompatActivity() {
+    internal open val phonePlaybackWindow: Boolean get() = false
     private var createdUiScaleFactor: Float? = null
     private var pendingUiScaleRecreate: Boolean = false
     protected var restoredState: Bundle? = null
