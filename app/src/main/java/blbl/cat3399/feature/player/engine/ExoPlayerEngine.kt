@@ -6,6 +6,7 @@ import android.content.Context
 import android.net.Uri
 import android.os.SystemClock
 import android.view.Surface
+import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.Format
 import androidx.media3.common.MediaItem
@@ -93,6 +94,7 @@ internal class ExoPlayerEngine(
 
     val exoPlayer: ExoPlayer =
         ExoPlayer.Builder(context, BlblRenderersFactory(context.applicationContext, volumeBalanceProcessor))
+            .setAudioAttributes(AudioAttributes.DEFAULT, true)
             .setLoadControl(loadControl)
             .setTrackSelector(trackSelector)
             .setVideoChangeFrameRateStrategy(C.VIDEO_CHANGE_FRAME_RATE_STRATEGY_OFF)
